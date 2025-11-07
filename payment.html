@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopZone - Complete Payment</title>
+    
+    <link rel="stylesheet" href="customer.css" />
+    
+    <link rel="stylesheet" href="payment.css" />
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="container header-container">
+            <div class="header-left">
+                <a href="customer.html" class="logo">
+                    Vendora
+                </a>
+            </div>
+
+            <div class="header-search-desktop">
+                <div class="search-bar-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input
+                        type="text"
+                        id="search-input-desktop"
+                        placeholder="Search for products, brands and more..."
+                        class="search-input"
+                    />
+                </div>
+            </div>
+
+            <div class="header-nav">
+                <a href="customer.html?view=orders" class="nav-button" title="Orders">
+                    <i data-lucide="package"></i>
+                    <span id="orders-count-badge" class="nav-badge hidden"></span>
+                </a>
+                <a href="customer.html?view=wishlist" class="nav-button" title="Wishlist">
+                    <i data-lucide="heart" id="wishlist-icon"></i>
+                    <span id="wishlist-count-badge" class="nav-badge hidden"></span>
+                </a>
+                <a href="customer.html?view=cart" class="nav-button" title="Cart">
+                    <i data-lucide="shopping-cart"></i>
+                    <span id="cart-count-badge" class="nav-badge hidden"></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="container header-search-mobile">
+            <div class="search-bar-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input
+                    type="text"
+                    id="search-input-mobile"
+                    placeholder="Search products..."
+                    class="search-input"
+                />
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <div id="payment-page-content">
+            </div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="text-center">© 2025 ShopZone. All rights reserved.</div>
+    </footer>
+
+    <script src="payment.js"></script>
+</body>
+</html>

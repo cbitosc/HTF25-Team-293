@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vendor Multi Product Entry</title>
+  <style>
+    body{font-family:system-ui,Arial; background:#e7f4ff; margin:0; padding:0}
+    
+    .navbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 20px;
+      background:#0077cc;
+      color:#fff;
+    }
+    .navbar .logo{
+      font-size:24px;
+      font-weight:bold;
+    }
+    .navbar a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:20px;
+      font-weight:500;
+      transition:0.3s;
+    }
+    .navbar a:hover{
+      text-decoration:underline;
+    }
+
+    .container{
+      max-width:1000px;
+      margin:20px auto;
+      background:#ffffff;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(20,30,40,0.08);
+    }
+    h1{color:#0077cc;margin-bottom:10px}
+    .product-card{border:2px solid #b3e0ff;padding:12px;border-radius:10px;margin-bottom:10px;position:relative;background:#f5fbff}
+    .product-card label{display:block;margin-top:8px;font-weight:500;color:#0077cc}
+    .product-card input, .product-card textarea, .product-card select{display:block;width:100%;margin:6px 0;padding:8px;border-radius:6px;border:1px solid #aadfff}
+    button{background:#00aaff;color:#fff;border:0;padding:8px 14px;border-radius:8px;cursor:pointer;transition:0.3s}
+    button:hover{opacity:0.9}
+    button.secondary{background:#cceaff;color:#003f5c}
+    .remove-btn{position:absolute;right:10px;top:10px;background:#ff5757;color:#fff;border:0;padding:4px 8px;border-radius:6px;cursor:pointer}
+    .actions{display:flex;gap:10px;margin-top:10px}
+    table{width:100%;border-collapse:collapse;margin-top:20px}
+    th,td{padding:10px;border-bottom:1px solid #cceaff;text-align:left}
+    .preview-img{width:60px;height:60px;object-fit:cover;border-radius:8px;margin-top:6px;border:1px solid #aadfff}
+    .success-msg{background:#4CAF50;color:white;padding:12px;border-radius:8px;margin:10px 0;display:none}
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="logo">Vendora</div>
+    <div class="nav-links">
+      <a href="order seller.html">Orders</a>
+      <a href="product-analytics.html">Analytics</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Vendor Multi Product Entry</h1>
+    <p>Add multiple products before saving them all together. Products will be visible to customers immediately.</p>
+    
+    <div id="success-message" class="success-msg"></div>
+
+    <div id="product-list"></div>
+    <div class="actions">
+      <button id="add-product">+ Add Product</button>
+      <button id="save-all">Save All</button>
+      <button id="clear-all" class="secondary">Clear All</button>
+    </div>
+
+    <table id="products-table">
+      <thead><tr><th>Image</th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Description</th><th>Actions</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const productList = document.getElementById('product-list');
+    const tableBody = document.querySelector('#products-table tbody');
+    const successMsg = document.getElementById('success-message');
+
+    let savedProducts = JSON.parse(localStorage.getItem('vendorProducts') || '[]');
+    let nextProductId = parseInt(localStorage.getItem('nextProductId') || '100');
+
+    const categories = [
+      { id: 'mobiles', name: 'Mobiles', icon: '📱' },
+      { id: 'laptops', name: 'Laptops', icon: '💻' },
+      { id: 'watches', name: 'Watches', icon: '⌚' },
+      { id: 'headphones', name: 'Headphones', icon: '🎧' },
+      { id: 'tablets', name: 'Tablets', icon: '📱' },
+      { id: 'cameras', name: 'Cameras', icon: '📷' },
+    ];
+
+    function showSuccess(message){
+      successMsg.textContent = message;
+      successMsg.style.display = 'block';
+      setTimeout(()=>{ successMsg.style.display = 'none'; }, 3000);
+    }
+
+    function createCard(product = {}, index = null){
+      const div = document.createElement('div');
+      div.className = 'product-card';
+      div.innerHTML = `
+        <button class="remove-btn" type="button">×</button>
+        
+        <label>Product Name *</label>
+        <input type="text" placeholder="Product name" class="name" required />
+        
+        <label>Category *</label>
+        <select class="category" required>
+          <option value="">Select Category</option>
+          ${categories.map(cat => `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`).join('')}
+        </select>
+        
+        <label>Price (₹) *</label>
+        <input type="number" placeholder="Price (₹)" class="price" min="0" step="0.01" required />
+        
+        <label>Stock Quantity *</label>
+        <input type="number" placeholder="Stock quantity" class="stock" min="0" step="1" required />
+        
+        <label>Discount (%)</label>
+        <input type="number" placeholder="Discount percentage" class="discount" min="0" max="100" step="1" value="0" />
+        
+        <label>Rating (1-5)</label>
+        <input type="number" placeholder="Rating" class="rating" min="1" max="5" step="0.1" value="4.5" />
+        
+        <label>Description</label>
+        <textarea placeholder="Product description" class="desc"></textarea>
+        
+        <label>Product Image (Icon/Emoji)</label>
+        <input type="text" placeholder="e.g., 📱, 💻, ⌚" class="image-icon" maxlength="2" />
+        
+        <button class="update-btn" type="button" style="margin-top:6px; display:none;">Update Product</button>
+      `;
+
+      const updateBtn = div.querySelector('.update-btn');
+      const removeBtn = div.querySelector('.remove-btn');
+
+      if(product.name){
+        div.querySelector('.name').value = product.name;
+        div.querySelector('.category').value = product.category;
+        div.querySelector('.price').value = product.price;
+        div.querySelector('.stock').value = product.stock;
+        div.querySelector('.discount').value = product.discount || 0;
+        div.querySelector('.rating').value = product.rating || 4.5;
+        div.querySelector('.desc').value = product.description;
+        div.querySelector('.image-icon').value = product.image;
+        updateBtn.style.display = 'inline-block';
+      }
+
+      removeBtn.addEventListener('click',()=>{
+        div.remove();
+        if(index !== null){ 
+          savedProducts.splice(index,1); 
+          localStorage.setItem('vendorProducts', JSON.stringify(savedProducts));
+          renderTable(); 
+          showSuccess('Product removed!');
+        }
+      });
+
+      updateBtn.addEventListener('click',()=>{
+        const name = div.querySelector('.name').value.trim();
+        const category = div.querySelector('.category').value;
+        if(!name || !category){ 
+          alert('Please fill in Product Name and Category'); 
+          return; 
+        }
+        
+        savedProducts[index] = {
+          ...savedProducts[index],
+          name,
+          category,
+          price: parseFloat(div.querySelector('.price').value)||0,
+          stock: parseInt(div.querySelector('.stock').value)||0,
+          discount: parseInt(div.querySelector('.discount').value)||0,
+          rating: parseFloat(div.querySelector('.rating').value)||4.5,
+          description: div.querySelector('.desc').value.trim(),
+          image: div.querySelector('.image-icon').value.trim() || '📦',
+          reviews: savedProducts[index].reviews || 100
+        };
+        localStorage.setItem('vendorProducts', JSON.stringify(savedProducts));
+        renderTable();
+        div.remove();
+        showSuccess('Product updated successfully!');
+      });
+
+      productList.appendChild(div);
+    }
+
+    function saveAll(){
+      const cards = document.querySelectorAll('.product-card');
+      let addedCount = 0;
+      
+      cards.forEach(card=>{
+        const name = card.querySelector('.name').value.trim();
+        const category = card.querySelector('.category').value;
+        if(!name || !category) return;
+        
+        const product = {
+          id: nextProductId++,
+          name,
+          category,
+          price: parseFloat(card.querySelector('.price').value)||0,
+          stock: parseInt(card.querySelector('.stock').value)||0,
+          discount: parseInt(card.querySelector('.discount').value)||0,
+          rating: parseFloat(card.querySelector('.rating').value)||4.5,
+          description: card.querySelector('.desc').value.trim(),
+          image: card.querySelector('.image-icon').value.trim() || '📦',
+          reviews: 100
+        };
+        savedProducts.push(product);
+        addedCount++;
+      });
+      
+      if(addedCount > 0){
+        localStorage.setItem('vendorProducts', JSON.stringify(savedProducts));
+        localStorage.setItem('nextProductId', nextProductId.toString());
+        productList.innerHTML = '';
+        renderTable();
+        showSuccess(`${addedCount} product(s) added successfully!`);
+      } else {
+        alert('Please add at least one product with name and category');
+      }
+    }
+
+    function renderTable(){
+      tableBody.innerHTML='';
+      savedProducts.forEach((p,i)=>{
+        const tr = document.createElement('tr');
+        const catName = categories.find(c => c.id === p.category)?.name || p.category;
+        tr.innerHTML = `
+          <td style="font-size:32px">${p.image}</td>
+          <td>${p.name}</td>
+          <td>${catName}</td>
+          <td>₹${p.price.toFixed(2)} ${p.discount > 0 ? `<span style="color:#4CAF50">(-${p.discount}%)</span>` : ''}</td>
+          <td>${p.stock}</td>
+          <td>${p.description}</td>
+          <td><button onclick='editProduct(${i})'>Edit</button> <button onclick='deleteProduct(${i})' style="background:#ff5757">Delete</button></td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function editProduct(index){
+      createCard(savedProducts[index], index);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function deleteProduct(index){
+      if(confirm('Are you sure you want to delete this product?')){
+        savedProducts.splice(index,1);
+        localStorage.setItem('vendorProducts', JSON.stringify(savedProducts));
+        renderTable();
+        showSuccess('Product deleted!');
+      }
+    }
+
+    document.getElementById('add-product').addEventListener('click',()=>createCard());
+    document.getElementById('save-all').addEventListener('click',saveAll);
+    document.getElementById('clear-all').addEventListener('click',()=>{
+      if(confirm('Clear all unsaved products?')){
+        productList.innerHTML='';
+      }
+    });
+
+    renderTable();
+    createCard();
+  </script>
+</body>
+</html>
